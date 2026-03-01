@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pokémon Ranking Builder Pro - Dynamic Grid</title>
+    <title>Pokémon Ranking </title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -176,15 +176,15 @@
 
     <div class="controls">
         <select id="sizeSelect" onchange="changeGridSize()">
-            <option value="6">Top 6 Pokémon</option>
-            <option value="7">Top 7 Pokémon</option>
-            <option value="8">Top 8 Pokémon</option>
-            <option value="9">Top 9 Pokémon</option>
+            <option value="6"> 6 Pokémon</option>
+            <option value="7"> 7 Pokémon</option>
+            <option value="8"> 8 Pokémon</option>
+            <option value="9"> 9 Pokémon</option>
             <option value="10">Top 10 Pokémon</option>
-            <option value="11">Top 11 Pokémon</option>
-            <option value="12" selected>Top 12 Pokémon (Mặc định)</option>
+            <option value="11"> 11 Pokémon</option>
+            <option value="12" selected> 12 Pokémon (Mặc định)</option>
         </select>
-        <button onclick="downloadImage()">⬇️ Tải ảnh bảng xếp hạng (PNG)</button>
+        <button onclick="downloadImage()">⬇️ Tải Ảnh </button>
     </div>
 
     <div id="capture-area">
@@ -579,4 +579,5 @@
         fetchInitialData();
     </script>
 </body>
+
 </html>
