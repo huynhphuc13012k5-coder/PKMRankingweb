@@ -1,1 +1,513 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pokémon Ranking Builder Pro - Legends Z-A & Gen 10</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f0f4f8; --card-bg: #ffffff;
+            --primary-blue: #006aff; --primary-blue-dark: #005ae6;
+            --border-color: #e2e8f0; --text-dark: #1a202c; --text-gray: #718096;
+            --v-gold: #FFD700; --v-silver: #C0C0C0; --v-bronze: #CD7F32;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color); margin: 0; padding: 15px;
+            display: flex; flex-direction: column; align-items: center; color: var(--text-dark);
+        }
+
+        .controls { margin-bottom: 20px; display: flex; justify-content: center; width: 100%; }
+        button {
+            background-color: var(--primary-blue); color: white; border: none; padding: 12px 24px;
+            font-size: 16px; font-weight: 600; border-radius: 8px; cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s; width: 100%; max-width: 400px;
+        }
+        button:hover { background-color: var(--primary-blue-dark); box-shadow: 0 6px 10px rgba(0,0,0,0.15); }
+
+        #capture-area {
+            background-color: white; padding: 25px; border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); 
+            width: 100%; max-width: 1000px; box-sizing: border-box;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #001f4d 0%, #004080 100%);
+            color: white; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 25px; border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .header::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 70% 50%, rgba(100,200,255,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; position: relative; z-index: 1; }
+        .pokeball-icon { width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
+        
+        .title-text {
+            font-family: 'Arial Black', Impact, sans-serif;
+            font-size: clamp(20px, 4.5vw, 30px);
+            color: #ffcb05; 
+            text-shadow: 
+                -2px -2px 0 #3c5aa6,  2px -2px 0 #3c5aa6,
+                -2px  2px 0 #3c5aa6,  2px  2px 0 #3c5aa6,
+                 0px  4px 0 #1b3266,  0px  6px 5px rgba(0,0,0,0.5); 
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-style: italic;
+            margin: 0; line-height: 1.2; padding-bottom: 5px;
+        }
+
+        .my-logo { height: clamp(35px, 8vw, 55px); max-width: 150px; object-fit: contain; position: relative; z-index: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+
+        /* BỐ CỤC LƯỚI */
+        .ranking-grid { display: flex; flex-direction: column; gap: 20px; }
+        .row-top { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 15px; }
+        .row-mid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .row-bot { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+
+        .card { 
+            background: var(--card-bg); border: 1px solid var(--border-color); 
+            border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; 
+            overflow: hidden; position: relative; transition: transform 0.2s, box-shadow 0.2s; 
+            min-height: 220px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .card:hover { transform: translateY(-3px); border-color: #cbd5e0; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+
+        .card-info { padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; min-height: 50px; }
+        .rank-display { font-size: clamp(14px, 3vw, 18px); font-weight: 800; color: var(--text-dark); padding: 4px 10px; border-radius: 6px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; }
+        .card.rank-1 .rank-display { background: var(--v-gold); color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .card.rank-2 .rank-display { background: var(--v-silver); color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .card.rank-3 .rank-display { background: var(--v-bronze); color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+
+        .poke-info-container { 
+            text-align: right; flex: 1; padding-left: 10px; min-width: 0; 
+            display: flex; flex-direction: column; align-items: flex-end; 
+        }
+        
+        /* FIX LỖI MẤT CHỮ: Tự động xuống dòng cho tên siêu dài */
+        .poke-name { 
+            font-size: clamp(12px, 2.5vw, 14px); 
+            font-weight: 700; color: var(--primary-blue); margin-bottom: 5px; 
+            white-space: normal; /* Cho phép xuống dòng */
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Tối đa 2 dòng */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.2;
+            width: 100%;
+        }
+        .card.rank-1 .poke-name { font-size: clamp(14px, 3.5vw, 17px); }
+
+        .types { display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap; }
+        .type-badge { color: white; font-size: 9px; padding: 3px 5px; border-radius: 4px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; border: 1px solid rgba(0,0,0,0.2); text-shadow: 1px 1px 1px rgba(0,0,0,0.6); box-shadow: inset 0 -2px 3px rgba(0,0,0,0.2); }
+
+        .image-section { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; padding: 15px 10px; }
+        .image-frame { width: 75%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; position: relative; border-radius: 50%; border: 4px solid var(--border-color); background-color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: border-color 0.4s, box-shadow 0.4s; max-width: 150px; }
+        .bg-circle { position: absolute; border-radius: 50%; width: 100%; height: 100%; z-index: 0; overflow: hidden; background-color: #f7fafc; }
+        .bg-circle::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('Pokeball.png'); background-size: 75%; background-position: center; background-repeat: no-repeat; opacity: 0.1; }
+        .poke-img { max-width: 85%; max-height: 85%; z-index: 1; object-fit: contain; position: relative; transition: transform 0.2s; }
+        .card:hover .poke-img { transform: scale(1.05); }
+        .empty-text { color: var(--text-gray); font-weight: 600; font-size: 13px; z-index: 1; padding: 10px; text-align: center; }
+
+        /* NÚT SHINY */
+        .shiny-btn {
+            position: absolute; top: 10px; left: 10px; z-index: 10;
+            background: rgba(255,255,255,0.8); border-radius: 50%;
+            width: 32px; height: 32px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color); transition: 0.2s;
+            opacity: 0.5; filter: grayscale(100%);
+        }
+        .card.is-shiny .shiny-btn { opacity: 1; filter: grayscale(0%); background: #fffbe6; border-color: var(--v-gold); box-shadow: 0 0 8px rgba(255, 215, 0, 0.6); }
+        .shiny-btn:hover { opacity: 1; transform: scale(1.1); }
+
+        .item-slot { position: absolute; bottom: 10px; right: 10px; width: clamp(30px, 8vw, 38px); height: clamp(30px, 8vw, 38px); background: white; border: 2px solid #cbd5e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.1); overflow: hidden; }
+        .item-slot:hover { border-color: var(--primary-blue); transform: scale(1.15); background: #f0f7ff; }
+        .item-placeholder-ball { width: 70%; height: 70%; object-fit: contain; opacity: 0.3; transition: 0.2s; }
+        .item-slot:hover .item-placeholder-ball { opacity: 0.6; }
+        .item-icon { width: 70%; height: 70%; object-fit: contain; display: none; }
+        .item-slot.has-item .item-icon { display: block; }
+        .item-slot.has-item .item-placeholder-ball { display: none; }
+        .item-slot.has-item { border-style: solid; border-color: var(--primary-blue); border-width: 2px; }
+
+        .disclaimer { text-align: center; font-size: 12px; color: var(--text-gray); margin-top: 20px; padding: 15px; width: 100%; max-width: 1000px; background: white; border-radius: 8px; border: 1px solid var(--border-color); box-sizing: border-box; }
+
+        @media (max-width: 800px) {
+            #capture-area:not(.force-desktop) .row-top { grid-template-columns: 1fr; }
+            #capture-area:not(.force-desktop) .row-mid { grid-template-columns: repeat(2, 1fr); }
+            #capture-area:not(.force-desktop) .row-bot { grid-template-columns: repeat(2, 1fr); }
+            #capture-area { padding: 15px; }
+            .image-frame { width: 60%; }
+        }
+
+        #modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); padding: 15px; }
+        #search-modal { background: white; width: 100%; max-width: 450px; border-radius: 12px; padding: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 85vh; display: flex; flex-direction: column; box-sizing: border-box; }
+        #modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        #search-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        #search-input, #type-filter { width: 100%; padding: 12px; font-size: 15px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; box-sizing: border-box; }
+        #search-input:focus { border-color: var(--primary-blue); }
+        #search-results { flex: 1; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+        .result-item { display: flex; align-items: center; padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+        .result-item:hover { background-color: #f7fafc; }
+        .result-item img { width: 40px; height: 40px; margin-right: 15px; object-fit: contain; }
+        .result-item span { font-weight: 600; text-transform: capitalize; font-size: 14px; }
+        .close-modal { cursor: pointer; color: #ef4444; font-weight: 700; font-size: 24px; line-height: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <button onclick="downloadImage()">⬇️ Tải ảnh bảng xếp hạng (PNG)</button>
+    </div>
+
+    <div id="capture-area">
+        <div class="header">
+            <div class="header-left">
+                <img src="Pokeball.png" alt="Pokeball" class="pokeball-icon" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';">
+                <span class="title-text">Pokémon Ranking</span>
+            </div>
+            <img src="logo.png" alt="My Logo" class="my-logo" onerror="this.style.display='none';">
+        </div>
+
+        <div class="ranking-grid">
+            <div class="row-top">
+                <script>
+                    const top3 = [1, 2, 3];
+                    top3.forEach(rank => {
+                        document.write(`
+                        <div class="card rank-${rank}" id="slot-${rank}" onclick="openSearch(event, ${rank}, 'pokemon')">
+                            <div class="card-info">
+                                <div class="rank-display">${rank}</div>
+                                <div class="poke-info-container"><div class="poke-name">Trống</div><div class="types"></div></div>
+                            </div>
+                            <div class="image-section">
+                                <div class="shiny-btn" onclick="toggleShiny(event, ${rank})" title="Bật/Tắt Shiny">✨</div>
+                                <div class="image-frame"><div class="bg-circle"></div><span class="empty-text">+ Chọn</span></div>
+                                <div class="item-slot" onclick="openSearch(event, ${rank}, 'item')" title="Chọn Trang Bị (Item)">
+                                    <img src="Pokeball.png" class="item-placeholder-ball" alt="Pokeball" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';">
+                                    <img src="" class="item-icon" alt="Item" crossOrigin="anonymous">
+                                </div>
+                            </div>
+                        </div>`);
+                    });
+                </script>
+            </div>
+
+            <div class="row-mid">
+                <script>
+                    for(let rank=4; rank<=7; rank++){
+                        document.write(`
+                        <div class="card" id="slot-${rank}" onclick="openSearch(event, ${rank}, 'pokemon')">
+                            <div class="card-info">
+                                <div class="rank-display">${rank}</div>
+                                <div class="poke-info-container"><div class="poke-name">Trống</div><div class="types"></div></div>
+                            </div>
+                            <div class="image-section">
+                                <div class="shiny-btn" onclick="toggleShiny(event, ${rank})" title="Bật/Tắt Shiny">✨</div>
+                                <div class="image-frame"><div class="bg-circle"></div><span class="empty-text">+ Chọn</span></div>
+                                <div class="item-slot" onclick="openSearch(event, ${rank}, 'item')" title="Chọn Trang Bị (Item)">
+                                    <img src="Pokeball.png" class="item-placeholder-ball" alt="Pokeball" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';">
+                                    <img src="" class="item-icon" alt="Item" crossOrigin="anonymous">
+                                </div>
+                            </div>
+                        </div>`);
+                    }
+                </script>
+            </div>
+
+            <div class="row-bot">
+                <script>
+                    for(let rank=8; rank<=12; rank++){
+                        document.write(`
+                        <div class="card" id="slot-${rank}" onclick="openSearch(event, ${rank}, 'pokemon')">
+                            <div class="card-info">
+                                <div class="rank-display">${rank}</div>
+                                <div class="poke-info-container"><div class="poke-name">Trống</div><div class="types"></div></div>
+                            </div>
+                            <div class="image-section">
+                                <div class="shiny-btn" onclick="toggleShiny(event, ${rank})" title="Bật/Tắt Shiny">✨</div>
+                                <div class="image-frame"><div class="bg-circle"></div><span class="empty-text">+ Chọn</span></div>
+                                <div class="item-slot" onclick="openSearch(event, ${rank}, 'item')" title="Chọn Trang Bị (Item)">
+                                    <img src="Pokeball.png" class="item-placeholder-ball" alt="Pokeball" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';">
+                                    <img src="" class="item-icon" alt="Item" crossOrigin="anonymous">
+                                </div>
+                            </div>
+                        </div>`);
+                    }
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="disclaimer">
+        This is a non-commercial fan-made project. Pokémon and all related names are trademarks of Nintendo, Game Freak, and The Pokémon Company. I do not own any Pokémon-related copyrights.
+    </div>
+
+    <div id="modal-overlay">
+        <div id="search-modal">
+            <div id="modal-header">
+                <h3 id="modal-title" style="margin:0;">Chọn Pokémon</h3>
+                <span class="close-modal" onclick="closeSearch()">✖</span>
+            </div>
+            <div id="search-controls">
+                <input type="text" id="search-input" placeholder="Tên (VD: pikachu, browt...)" oninput="filterData()">
+                <select id="type-filter" onchange="handleTypeChange()">
+                    <option value="">Tất cả hệ</option>
+                    <option value="normal">Normal</option><option value="fire">Fire</option>
+                    <option value="water">Water</option><option value="electric">Electric</option>
+                    <option value="grass">Grass</option><option value="ice">Ice</option>
+                    <option value="fighting">Fighting</option><option value="poison">Poison</option>
+                    <option value="ground">Ground</option><option value="flying">Flying</option>
+                    <option value="psychic">Psychic</option><option value="bug">Bug</option>
+                    <option value="rock">Rock</option><option value="ghost">Ghost</option>
+                    <option value="dragon">Dragon</option><option value="dark">Dark</option>
+                    <option value="steel">Steel</option><option value="fairy">Fairy</option>
+                </select>
+            </div>
+            <div id="search-results"></div>
+        </div>
+    </div>
+
+    <script>
+        const typeColors = { normal: '#A8A878', fire: '#F08030', water: '#6890F0', electric: '#F8D030', grass: '#78C850', ice: '#98D8D8', fighting: '#C03028', poison: '#A040A0', ground: '#E0C068', flying: '#A890F0', psychic: '#F85888', bug: '#A8B820', rock: '#B8A038', ghost: '#705898', dragon: '#7038F8', dark: '#705848', steel: '#B8B8D0', fairy: '#EE99AC' };
+        
+        // DỮ LIỆU ĐỘC QUYỀN (Gen 10 & MEGA ZA THÊM VÀO)
+        // Lưu ý: Đã map đúng ảnh 1.png cho Pombon, 2.png cho Browt, 3.png cho Gecqua
+        const customPokemon = [
+            { name: 'pombon', id: 'c1', isCustom: true, types: ['fire'], customImg: '1.png' },
+            { name: 'browt', id: 'c2', isCustom: true, types: ['grass'], customImg: '2.png' },
+            { name: 'gecqua', id: 'c3', isCustom: true, types: ['water'], customImg: '3.png' },
+            { name: 'garchomp-mega-z', id: 'c4', isCustom: true, types: ['dragon', 'ground'] },
+            { name: 'dragonite-mega', id: 'c5', isCustom: true, types: ['dragon', 'flying'] },
+            { name: 'flygon-mega', id: 'c6', isCustom: true, types: ['ground', 'dragon'] },
+            { name: 'chesnaught-mega', id: 'c7', isCustom: true, types: ['grass', 'fighting'] },
+            { name: 'delphox-mega', id: 'c8', isCustom: true, types: ['fire', 'psychic'] },
+            { name: 'greninja-mega-z', id: 'c9', isCustom: true, types: ['water', 'dark'] },
+            { name: 'charizard-mega-z', id: 'c10', isCustom: true, types: ['fire', 'dragon'] },
+            { name: 'mewtwo-mega-z', id: 'c11', isCustom: true, types: ['psychic'] }
+        ];
+
+        let pokemonDataList = [];
+        let itemDataList = [];
+        let typeCache = {};
+        let activeSlot = null;
+        let currentSearchMode = 'pokemon';
+
+        async function fetchInitialData() {
+            const pokeRes = await fetch('https://pokeapi.co/api/v2/pokemon?limit=10000');
+            const pokeData = await pokeRes.json();
+            
+            let fetchedList = pokeData.results.map(p => { const urlParts = p.url.split('/'); return { name: p.name, id: parseInt(urlParts[urlParts.length - 2]), url: p.url, isCustom: false }; })
+            .filter(p => (p.id >= 1 && p.id <= 1025) || p.id >= 10000);
+
+            pokemonDataList = [...fetchedList, ...customPokemon];
+
+            const itemRes = await fetch('https://pokeapi.co/api/v2/item?limit=2000');
+            const itemData = await itemRes.json();
+            itemDataList = itemData.results;
+        }
+
+        function formatName(str) { return str.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); }
+        
+        function openSearch(event, slotIndex, mode = 'pokemon') {
+            if(event) event.stopPropagation();
+            activeSlot = slotIndex;
+            currentSearchMode = mode;
+            
+            document.getElementById('modal-overlay').style.display = 'flex';
+            const input = document.getElementById('search-input');
+            const title = document.getElementById('modal-title');
+            const typeFilter = document.getElementById('type-filter');
+
+            input.value = '';
+            
+            if(mode === 'item') {
+                title.innerText = 'Chọn Trang Bị (Item)';
+                input.placeholder = 'Tên Item (VD: leftovers...)';
+                typeFilter.style.display = 'none';
+            } else {
+                title.innerText = 'Chọn Pokémon (Tất cả Gen & Mega)';
+                input.placeholder = 'Tên (VD: charizard mega z, pombon...)';
+                typeFilter.style.display = 'block';
+                typeFilter.value = '';
+            }
+            input.focus();
+            filterData();
+        }
+
+        function closeSearch() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+        async function handleTypeChange() {
+            const type = document.getElementById('type-filter').value;
+            if (type && !typeCache[type]) {
+                document.getElementById('search-results').innerHTML = '<div style="padding:15px;text-align:center;">Đang tải dữ liệu hệ...</div>';
+                const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`);
+                const data = await res.json();
+                typeCache[type] = new Set(data.pokemon.map(p => p.pokemon.name));
+            }
+            filterData();
+        }
+
+        function filterData() {
+            if(currentSearchMode === 'pokemon') filterPokemon();
+            else filterItem();
+        }
+
+        function filterPokemon() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const type = document.getElementById('type-filter').value;
+            let results = pokemonDataList;
+            if (type && typeCache[type]) results = results.filter(p => typeCache[type].has(p.name) || (p.isCustom && p.types.includes(type)));
+            results = results.filter(p => p.name.includes(query)).slice(0, 50);
+            
+            const container = document.getElementById('search-results');
+            container.innerHTML = '';
+            results.forEach(p => {
+                const div = document.createElement('div'); div.className = 'result-item';
+                // Nếu custom và có customImg thì tải customImg, nếu ko thì dùng Pokeball
+                let imgHtml = '';
+                if (p.isCustom) {
+                    imgHtml = p.customImg ? `<img src="${p.customImg}">` : `<img src="Pokeball.png" style="opacity:0.3">`;
+                } else {
+                    imgHtml = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" onerror="this.src='https://via.placeholder.com/50'">`;
+                }
+                div.innerHTML = `${imgHtml} <span>${formatName(p.name)}</span>`;
+                div.onclick = () => selectPokemon(p); container.appendChild(div);
+            });
+        }
+
+        function filterItem() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const results = itemDataList.filter(i => i.name.includes(query)).slice(0, 50);
+            
+            const container = document.getElementById('search-results');
+            container.innerHTML = '';
+            results.forEach(item => {
+                const div = document.createElement('div'); div.className = 'result-item';
+                const imgUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${item.name}.png`;
+                div.innerHTML = `<img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/50'"> <span>${formatName(item.name)}</span>`;
+                div.onclick = () => selectItem(item, imgUrl); container.appendChild(div);
+            });
+        }
+
+        async function selectPokemon(pokemon) {
+            closeSearch();
+            const slot = document.getElementById(`slot-${activeSlot}`);
+            const imageFrame = slot.querySelector('.image-frame');
+            const emptyText = slot.querySelector('.empty-text');
+            if (emptyText) emptyText.remove();
+
+            slot.dataset.pokeId = pokemon.id;
+            slot.dataset.isCustom = pokemon.isCustom;
+            slot.classList.remove('is-shiny');
+
+            slot.querySelector('.poke-name').innerText = "Đang tải...";
+            slot.querySelector('.types').innerHTML = "";
+
+            if (pokemon.isCustom) {
+                updateCardUI(slot, imageFrame, pokemon.name, pokemon.types, pokemon.id, true);
+            } else {
+                const res = await fetch(pokemon.url); 
+                const data = await res.json();
+                updateCardUI(slot, imageFrame, pokemon.name, data.types.map(t=>t.type.name), pokemon.id, false);
+            }
+        }
+
+        function updateCardUI(slot, imageFrame, name, types, id, isCustom) {
+            slot.querySelector('.poke-name').innerText = formatName(name);
+            slot.querySelector('.poke-name').title = formatName(name);
+            
+            const primaryType = types[0];
+            const themeColor = typeColors[primaryType] || '#ccc';
+            
+            imageFrame.style.borderColor = themeColor;
+            imageFrame.style.boxShadow = `0 0 15px ${themeColor}80`;
+            
+            slot.querySelector('.types').innerHTML = types.map(t => `<span class="type-badge" style="background-color: ${typeColors[t]}">${t}</span>`).join('');
+
+            let imgEl = imageFrame.querySelector('.poke-img');
+            if (!imgEl) { imgEl = document.createElement('img'); imgEl.className = 'poke-img'; imgEl.crossOrigin = "anonymous"; imageFrame.appendChild(imgEl); }
+            
+            if (isCustom) {
+                // Kiểm tra xem custom Pokemon có file ảnh riêng không (Gen 10)
+                const customData = customPokemon.find(p => p.id === id);
+                if (customData && customData.customImg) {
+                    imgEl.src = customData.customImg;
+                    imgEl.style.opacity = '1';
+                } else {
+                    imgEl.src = 'Pokeball.png';
+                    imgEl.style.opacity = '0.5';
+                }
+                imgEl.style.filter = 'none';
+            } else {
+                imgEl.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+                imgEl.style.opacity = '1';
+                imgEl.style.filter = 'none';
+            }
+        }
+
+        function toggleShiny(event, rank) {
+            event.stopPropagation();
+            const card = document.getElementById(`slot-${rank}`);
+            const pokeId = card.dataset.pokeId;
+            const isCustom = card.dataset.isCustom === 'true';
+            if(!pokeId) return;
+
+            const isShiny = card.classList.toggle('is-shiny');
+            const imgEl = card.querySelector('.poke-img');
+
+            if (isCustom) {
+                // Đổi hiệu ứng màu cho các Pokemon Custom (vì chưa có link ảnh shiny chuẩn)
+                imgEl.style.filter = isShiny ? 'sepia(1) hue-rotate(30deg) saturate(3)' : 'none';
+            } else {
+                const basePath = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork';
+                imgEl.src = isShiny ? `${basePath}/shiny/${pokeId}.png` : `${basePath}/${pokeId}.png`;
+            }
+        }
+
+        function selectItem(item, imgUrl) {
+            closeSearch();
+            const slot = document.getElementById(`slot-${activeSlot}`);
+            const itemSlot = slot.querySelector('.item-slot');
+            const itemIcon = itemSlot.querySelector('.item-icon');
+            itemIcon.src = imgUrl; itemIcon.title = formatName(item.name);
+            itemSlot.classList.add('has-item');
+        }
+
+        function downloadImage() {
+            const captureArea = document.getElementById('capture-area');
+            const btn = document.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ Đang tạo ảnh..."; btn.disabled = true;
+
+            html2canvas(captureArea, { 
+                useCORS: true, allowTaint: true, backgroundColor: '#ffffff', scale: 2,
+                onclone: (clonedDoc) => {
+                    const clonedArea = clonedDoc.getElementById('capture-area');
+                    clonedArea.classList.add('force-desktop');
+                    clonedArea.style.width = '1000px';
+                    clonedArea.style.maxWidth = '1000px';
+                    
+                    // LỆNH MỚI: Tắt toàn bộ nút Shiny khi chụp ảnh
+                    const shinyBtns = clonedArea.querySelectorAll('.shiny-btn');
+                    shinyBtns.forEach(btn => btn.style.display = 'none');
+                }
+            }).then(canvas => {
+                const link = document.createElement('a'); link.download = `Pokémon_Ranking_FanMade.png`;
+                link.href = canvas.toDataURL('image/png'); link.click();
+                btn.innerText = originalText; btn.disabled = false;
+            }).catch(err => { alert("Lỗi tải ảnh!"); btn.innerText = originalText; btn.disabled = false; });
+        }
+        
+        fetchInitialData();
+    </script>
+</body>
+</html>
