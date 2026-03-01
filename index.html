@@ -387,7 +387,7 @@
                 const div = document.createElement('div'); div.className = 'result-item';
                 let imgHtml = '';
                 if (p.isCustom) {
-                    imgHtml = p.customImg ? `<img src="${p.customImg}">` : `<img src="Pokeball.png" style="opacity:0.3">`;
+                    imgHtml = p.customImg ? `<img src="${p.customImg}">` : `<img src="Pokeball.png" style="opacity:1">`;
                 } else {
                     imgHtml = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" onerror="this.src='https://via.placeholder.com/50'">`;
                 }
@@ -521,4 +521,5 @@
 </body>
 
 </html>
+
 
