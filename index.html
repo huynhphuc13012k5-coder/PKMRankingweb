@@ -499,7 +499,7 @@
             btn.innerText = "⏳ Đang tạo ảnh..."; btn.disabled = true;
 
             html2canvas(captureArea, { 
-                useCORS: true, allowTaint: true, backgroundColor: '#ffffff', scale: 2,
+                useCORS: true, allowTaint: true, backgroundColor: '#ffffff', scale: 3,
                 onclone: (clonedDoc) => {
                     const clonedArea = clonedDoc.getElementById('capture-area');
                     clonedArea.classList.add('force-desktop');
@@ -519,4 +519,5 @@
         fetchInitialData();
     </script>
 </body>
+
 </html>
