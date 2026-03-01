@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pokémon Ranking Builder Pro - Visual Enhanced</title>
+    <title>Pokémon Ranking </title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -113,13 +113,13 @@
         .bg-circle { position: absolute; border-radius: 50%; width: 100%; height: 100%; z-index: 0; overflow: hidden; background-color: #f7fafc; }
         
         /* HIỆN RÕ POKEBALL NỀN (Tăng Opacity từ 0.1 lên 0.25) */
-        .bg-circle::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('Pokeball.png'); background-size: 75%; background-position: center; background-repeat: no-repeat; opacity: 0.25; }
+        .bg-circle::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('Pokeball.png'); background-size: 75%; background-position: center; background-repeat: no-repeat; opacity: 0.1; }
         
         /* TỐI ƯU HIỂN THỊ POKEMON NÉT & NỔI BẬT */
         .poke-img { 
             max-width: 85%; max-height: 85%; z-index: 1; object-fit: contain; position: relative; 
             transition: transform 0.2s;
-            image-rendering: high-quality; /* Ép trình duyệt render nét nhất */
+            image-rendering: high-quality; /* render nét nhất */
             /* filter: drop-shadow được add bằng JS để ko đụng chạm Shiny */
         }
         .card:hover .poke-img { transform: scale(1.05); }
@@ -521,5 +521,6 @@
 </body>
 
 </html>
+
 
 
